@@ -1,0 +1,61 @@
+============== -*- outline -*- ==============
+
+  Renesas Reckless Register setting Reform Project
+
+2022/02/14	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+=============================================
+
+* What is this ? / Why needed ?
+
+	[BACK GROUND]
+
+	Renesas need to provide many kind of OS for customer for many reasons,
+	and each OS needs device drivers for each devices, thus we need to create
+	many drivers in total.
+
+	And from customer point of view, each device driver for same device on each
+	OS from Renesas should have same quality, but it never happened before.
+	Because device driver developer have never synchronized each other.
+
+	On the other hand, in some cases, customer received Linux BSP from Renesas,
+	and try to use it as test purpose, but they will switch to there own OS after
+	that for some reasons.
+	In such case, customer want to re-use Linux driver to there own OS, but
+	they can't, because of GPL license.
+
+	[DEVICE DRIVER]
+
+	Let's think about "device driver" here.
+	"device driver" talks to both "OS" and "HW".
+
+		<--- OS ---> <------------- device driver --------------> <--- HW --->
+
+		Linux     <-> (talk to OS) device driver (talk to HW) <--|
+		QNX       <-> (talk to OS) device driver (talk to HW) <--|
+		FreeRTOS  <-> (talk to OS) device driver (talk to HW) <--|
+		U-Boot    <-> (talk to OS) device driver (talk to HW) <--+-> SoC
+		Xen       <-> (talk to OS) device driver (talk to HW) <--|
+		Zephyr    <-> (talk to OS) device driver (talk to HW) <--|
+		Integrity <-> (talk to OS) device driver (talk to HW) <--|
+
+	If we can separate "talk to OS" and "talk to HW",
+	it will be...
+
+		<--- OS ---> <---------------- device driver -----------------><--- HW --->
+		             <----- OS wrapper driver ------><-- raw driver -->
+
+		Linux     <-> (talk to OS) device driver <--|
+		QNX       <-> (talk to OS) device driver <--|
+		FreeRTOS  <-> (talk to OS) device driver <--|
+		U-Boot    <-> (talk to OS) device driver <--+--> common driver  <->  SoC
+		Xen       <-> (talk to OS) device driver <--|    (talk to HW)
+		Zephyr    <-> (talk to OS) device driver <--|
+		Integrity <-> (talk to OS) device driver <--|
+
+	[THIS IS R4]
+
+	This is Renesas's recklessly project to separate "device driver" into
+	"OS wrapper driver" and "raw driver" ;P
+
+	"Renesas Reckless Register setting Reform Project", commonly known as
+	"Renesas R3 Project" or more simply "R4 Project" !!
