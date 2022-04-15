@@ -1,0 +1,85 @@
+============== -*- outline -*- ==============
+
+                 R4 device
+
+2022/04/14	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+=============================================
+
+---------------------------------------
+* Device
+---------------------------------------
+
+	It is assuming Renesas target OSs (= Linux, U-boot, FreeRTOS,
+	QNX, Xen, Zephyr, Integrity, etc) will *COPY* necessary [R4 driver]
+	to each OS, and calls [R4 driver API] from [OS driver].
+
+---------------------------------------
+* API Version compatibility
+---------------------------------------
+
+	Each device has own versions.
+
+		vX.Y.Z[-R]
+
+	X : major version
+	Y : minor version
+	Z : fix   version
+	R : release candidate
+
+	We try to keep [R4 driver API] compatibility as much as possible even
+	though new target SoC has coming. But it is *not strict mandatory*.
+	We can update API version if it was difficult to keep.
+
+	Basically, [R4 driver] is assumed to be copied/compiled/tested on each OS
+	by the engineer who has in charge of it.
+	Thus, it is assuming that the accident something like "the compile have
+	been broken without my knowledge", and/or "R4 driver API version have been
+	updated without my knowledge" are *NEVER HAPPEN*.
+
+	So, in case of we need to update API, we will keep API *major* version and
+	update just *minor* version if it was a small change.
+	This approach should work if it was mature device.
+	I2C is good example for it.
+
+	ex) In case of I2C device
+
+		v1.0.0 : for Gen2 driver
+		         for Gen3 driver
+		         for Gen4 driver
+
+			Gen5 needs +1 function which was not needed for Gen2/Gen3/Gen4.
+			Keep *major* version and Update *minor* version for Gen5 support.
+
+		v1.1.0 : for Gen2 driver
+			 for Gen3 driver
+			 for Gen4 driver
+			 for Gen5 driver
+
+	In this case, when [OS driver] uses Gen5 [R4 driver], it needs to adjust to v1.1.0
+	and copy it.
+
+	On the other hand, it is very difficult to keep API compatibility in case of rapidly
+	growing device. We shouldn't hesitate to update API major version, and avoid
+	pointless attempt to keeping compatibility.
+	This means each major version drivers are maintenanced in the same time.
+	Sound/Video are good example for it.
+
+	ex) In case of Sound device
+
+		Gen2/Gen3/Gen4 Sound vs Gen5 Sound are completly different style,
+		and it is impossible to keep compatibility.
+
+		v1.0.0 : for Gen2 driver
+			 for Gen3 driver
+			 for Gen4 driver
+
+		v2.0.0 : for Gen5 driver
+
+---------------------------------------
+* How to check version ?
+---------------------------------------
+
+	R4 has [version-check.sh] to check version.
+	It will indicate your R4 driver file consistency.
+
+		> ${renesas-r3-project}/script/version-check.sh ${your-r4-file}
