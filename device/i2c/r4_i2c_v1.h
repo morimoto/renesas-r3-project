@@ -12,6 +12,15 @@
 
 	https://github.com/morimoto/renesas-r3-project.git
 
+[Confirm the R4 version you are using]
+
+	It will indicate controlled driver, or it was custom.
+
+	ex)
+	> ${renesas-r3-project}/script/version-check.sh ${your-path-to-code}/r4_i2c_v1*
+	r4_i2c_v1.h                   : custom driver
+	r4_i2c_v1_rcar_gen3.c         : v1.0.0-rc1
+
 [Required function at OS]
 
 	rU32
