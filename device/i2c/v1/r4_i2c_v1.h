@@ -40,7 +40,8 @@
 
 [Prepare to use]
 
-	You need to copy [r4_i2c_priv] from each R4 driver.
+	You need to initialize [r4_i2c_priv] as 0,
+	and need to copy [r4_i2c_priv] from each R4 driver.
 	You can set OS data by r4_i2c_probe(), and get it via
 	r4->private on [Required function at OS].
 
@@ -76,7 +77,8 @@
 	}
 
 	// see [Prepare to use]
-	memcpy(r4, r4_target, sizeof(struct r4_i2c_priv));
+	memset(r4, 0, r4_target->alloc_size)
+	memcpy(r4,    r4_target, sizeof(struct r4_i2c_priv));
 	r4_i2c_probe(r4, priv);
 
 
