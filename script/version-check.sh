@@ -8,19 +8,17 @@
 TOP=`readlink -f "$0" | xargs dirname | xargs dirname`
 TARGET_DEVICEs=$@
 
-cd ${TOP}
-
 for target_device in ${TARGET_DEVICEs}
 do
 	t_dir=`echo ${target_device} | xargs dirname`
 	t_dev=`echo ${target_device} | xargs basename`
-	file=`find device | grep ${t_dev}`
+	file=`find ${TOP}/device | grep ${t_dev}`
 	if [ "x${file}" = "x" ]; then
 		echo "${t_dev} : unknown driver"
 	else
 		(
 			dir=`echo ${file} | xargs dirname`
-			SHA256SUMs=`ls ${TOP}/${dir}/sha256sum/*`
+			SHA256SUMs=`ls ${dir}/sha256sum/*`
 			cd ${t_dir}
 			ver=
 			for sha256sum in ${SHA256SUMs}
