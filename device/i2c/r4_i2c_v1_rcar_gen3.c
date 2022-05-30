@@ -96,6 +96,11 @@ struct r4_i2c_gen3_priv {
 
 #define R4_TO_RPIV(r4) (struct r4_i2c_gen3_priv *)(r4 + 1)
 
+/********************************************************
+
+	Common functions
+
+*********************************************************/
 static int r4_gen3_bus_barrier(struct r4_i2c_priv *r4)
 {
 	int i;
@@ -107,33 +112,6 @@ static int r4_gen3_bus_barrier(struct r4_i2c_priv *r4)
 	}
 
 	return -R4I2CERR_BUSY;
-}
-
-static int r4_gen3_recovery(struct r4_i2c_priv *r4)
-{
-	rU32 def = MDBS | OBPC;
-	int i;
-
-	/* send 9 SCL */
-	for (i = 0; i < 9; i++) {
-		r4_i2c_write(r4, ICMCR, def | FSDA | FSCL);	r4_i2c_udelay(r4, 5);
-		r4_i2c_write(r4, ICMCR, def | FSDA);		r4_i2c_udelay(r4,5);
-	}
-
-	/* send stop condition */
-	r4_i2c_udelay(r4, 5);
-	r4_i2c_write(r4, ICMCR, def | FSDA);		r4_i2c_udelay(r4, 5);
-	r4_i2c_write(r4, ICMCR, def);			r4_i2c_udelay(r4, 5);
-	r4_i2c_write(r4, ICMCR, def |		FSCL);	r4_i2c_udelay(r4, 5);
-	r4_i2c_write(r4, ICMCR, def | FSDA |	FSCL);	r4_i2c_udelay(r4, 5);
-
-	/*
-	 * FIXME
-	 *
-	 * Need to check recovery fail
-	 */
-
-	return 0;
 }
 
 static int r4_gen3_is_read(struct r4_i2c_gen3_priv *priv)
@@ -172,19 +150,6 @@ static int r4_gen3_setup_speed(struct r4_i2c_priv *r4, int bus_speed)
 	priv->icccr = (scgd << 3) | cdf;
 
 	return 0;
-}
-
-#define r4_gen3_dma_enable(r4)	r4_gen3_dma_ctrl(r4, 1)
-#define r4_gen3_dma_disable(r4)	r4_gen3_dma_ctrl(r4, 0)
-static void r4_gen3_dma_ctrl(struct r4_i2c_priv *r4, int enable)
-{
-	struct r4_i2c_gen3_priv *priv = R4_TO_RPIV(r4);
-	rU32 val = 0;
-
-	if (enable)
-		val = r4_gen3_is_read(priv) ? RMDMAE : TMDMAE;
-
-	r4_i2c_write(r4, ICDMAER, val);
 }
 
 #define r4_gen3_irq_enable(r4)	r4_gen3_irq_ctrl(r4, 1)
@@ -385,30 +350,50 @@ static int r4_gen3_xfer_continue(struct r4_i2c_priv *r4, rU32 msr)
 	return 0;
 }
 
-static int r4_gen3_xfer_pio_irq(struct r4_i2c_priv *r4)
+/********************************************************
+
+	RECOVERY
+
+*********************************************************/
+#ifdef CONFIG_R4_I2C_RECOVERY
+static int r4_gen3_recovery(struct r4_i2c_priv *r4)
 {
-	rU32 msr = r4_i2c_read(r4, ICMSR);
+	rU32 def = MDBS | OBPC;
+	int i;
 
-	return r4_gen3_xfer_continue(r4, msr);
-}
+	/* send 9 SCL */
+	for (i = 0; i < 9; i++) {
+		r4_i2c_write(r4, ICMCR, def | FSDA | FSCL);	r4_i2c_udelay(r4, 5);
+		r4_i2c_write(r4, ICMCR, def | FSDA);		r4_i2c_udelay(r4, 5);
+	}
 
-static int r4_gen3_xfer_pio(struct r4_i2c_priv *r4,
-			    int step, int step_max,
-			    rU32 address, rU8 *buf, int len)
-{
-	int ret;
+	/* send stop condition */
+	r4_i2c_udelay(r4, 5);
+	r4_i2c_write(r4, ICMCR, def | FSDA);		r4_i2c_udelay(r4, 5);
+	r4_i2c_write(r4, ICMCR, def);			r4_i2c_udelay(r4, 5);
+	r4_i2c_write(r4, ICMCR, def |		FSCL);	r4_i2c_udelay(r4, 5);
+	r4_i2c_write(r4, ICMCR, def | FSDA |	FSCL);	r4_i2c_udelay(r4, 5);
 
-	r4_gen3_xfer_init(r4, step, step_max, address, buf, len);
-
-	ret = r4_gen3_xfer_start(r4);
-	if (ret < 0)
-		return ret;
-
-	r4_gen3_irq_enable(r4);
+	/*
+	 * FIXME
+	 *
+	 * Need to check recovery fail
+	 */
 
 	return 0;
 }
+#define R4_I2C_RECOVERY\
+	.recovery		= r4_gen3_recovery,
+#else
+#define R4_I2C_RECOVERY
+#endif
 
+/********************************************************
+
+	ATOMIC
+
+*********************************************************/
+#ifdef CONFIG_R4_I2C_ATOMIC
 static rU32 r4_gen3_xfer_atomic_busy_wait_irq(struct r4_i2c_priv *r4)
 {
 	rU32 condition = WAIT_BUSY;
@@ -459,6 +444,66 @@ static int r4_gen3_xfer_atomic(struct r4_i2c_priv *r4,
 
 	/* return 0 means "success" as atomic function */
 	return 0;
+}
+#define R4_I2C_ATOMIC\
+	.xfer_atomic		= r4_gen3_xfer_atomic,
+#else
+#define R4_I2C_ATOMIC
+#endif
+
+/********************************************************
+
+	PIO
+
+*********************************************************/
+#ifdef CONFIG_R4_I2C_PIO
+static int r4_gen3_xfer_pio_irq(struct r4_i2c_priv *r4)
+{
+	rU32 msr = r4_i2c_read(r4, ICMSR);
+
+	return r4_gen3_xfer_continue(r4, msr);
+}
+
+static int r4_gen3_xfer_pio(struct r4_i2c_priv *r4,
+			    int step, int step_max,
+			    rU32 address, rU8 *buf, int len)
+{
+	int ret;
+
+	r4_gen3_xfer_init(r4, step, step_max, address, buf, len);
+
+	ret = r4_gen3_xfer_start(r4);
+	if (ret < 0)
+		return ret;
+
+	r4_gen3_irq_enable(r4);
+
+	return 0;
+}
+#define R4_I2C_PIO\
+	.xfer_pio		= r4_gen3_xfer_pio,\
+	.xfer_pio_irq		= r4_gen3_xfer_pio_irq,
+#else
+#define R4_I2C_PIO
+#endif
+
+/********************************************************
+
+	DMA
+
+*********************************************************/
+#ifdef CONFIG_R4_I2C_DMA
+#define r4_gen3_dma_enable(r4)	r4_gen3_dma_ctrl(r4, 1)
+#define r4_gen3_dma_disable(r4)	r4_gen3_dma_ctrl(r4, 0)
+static void r4_gen3_dma_ctrl(struct r4_i2c_priv *r4, int enable)
+{
+	struct r4_i2c_gen3_priv *priv = R4_TO_RPIV(r4);
+	rU32 val = 0;
+
+	if (enable)
+		val = r4_gen3_is_read(priv) ? RMDMAE : TMDMAE;
+
+	r4_i2c_write(r4, ICDMAER, val);
 }
 
 static int r4_gen3_xfer_dma_info(struct r4_i2c_priv *r4,
@@ -553,6 +598,14 @@ static int r4_gen3_xfer_dma_enable(struct r4_i2c_priv *r4, int enable)
 
 	return 0;
 }
+#define R4_I2C_DMA\
+	.xfer_dma_irq		= r4_gen3_xfer_dma_irq,\
+	.xfer_dma_setup		= r4_gen3_xfer_dma_setup,\
+	.xfer_dma_info		= r4_gen3_xfer_dma_info,\
+	.xfer_dma_enable	= r4_gen3_xfer_dma_enable,
+#else
+#define R4_I2C_DMA
+#endif
 
 /*
  * see
@@ -562,12 +615,8 @@ struct r4_i2c_priv r4_i2c_rcar_gen3 = {
 	.version		= R4_I2C_VERSION(1, VER_MINOR, VER_BUGFIX, VER_RC),
 	.alloc_size		= sizeof(struct r4_i2c_priv) + sizeof(struct r4_i2c_gen3_priv),
 	.setup_speed		= r4_gen3_setup_speed,
-	.recovery		= r4_gen3_recovery,
-	.xfer_atomic		= r4_gen3_xfer_atomic,
-	.xfer_pio		= r4_gen3_xfer_pio,
-	.xfer_pio_irq		= r4_gen3_xfer_pio_irq,
-	.xfer_dma_irq		= r4_gen3_xfer_dma_irq,
-	.xfer_dma_setup		= r4_gen3_xfer_dma_setup,
-	.xfer_dma_info		= r4_gen3_xfer_dma_info,
-	.xfer_dma_enable	= r4_gen3_xfer_dma_enable,
+	R4_I2C_RECOVERY
+	R4_I2C_ATOMIC
+	R4_I2C_PIO
+	R4_I2C_DMA
 };
