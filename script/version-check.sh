@@ -30,9 +30,9 @@ do
 				fi
 			done
 			if [ "x${ver}" = x ]; then
-				echo "${t_dev} : custom driver"
+				 printf "%-30s: %s\n" "${t_dev}" "custom driver"
 			else
-				echo "${t_dev} : ${ver}"
+				 printf "%-30s: %s\n" "${t_dev}" "${ver}"
 			fi
 		)
 	fi

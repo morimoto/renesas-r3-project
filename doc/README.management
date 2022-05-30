@@ -1,0 +1,81 @@
+============== -*- outline -*- ==============
+
+		R4 management
+
+2022/05/25	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+=============================================
+
+* Who makes R4
+
+	"Sharing register settings" is "perfect world" topics,
+	and Renesas upstream team can focus to it.
+	see also [README.R4]
+
+	*NOTE*
+	R4 may become Morimoto's hobby project.
+	There is no guarantee to be handled by upstream team for now.
+
+* Which device will be covered by R4
+
+	see also [README.api]
+
+	--TBD--
+
+	[possible]
+	I2C, DMA, Thermal, INTC, PWN, TMU, etc
+
+	[not impossible]
+	Clock, Sound, etc
+
+	[very difficult]
+	PFC, etc
+
+* When R4 driver is coming
+
+	Supporting from Gen3 on some device is nice idea
+	if possible. I think I2C can be good sample for it.
+
+	If R4 project was started in earnest, it will be from Gen5,
+	but not for all devices. Maybe 1 or 2 devices as beginning.
+	see also [README.idea]
+
+* How to handle R4 driver and existing driver
+
+	We need to have both driver (R4 base driver / OS specific
+	driver) should be exist in the same time for a while on each OS.
+	Existing driver is more stable, and less maintenance cost to
+	update. The decision to use which driver is user's choice.
+	Because we don't know what happen on it for now.
+
+	Therefore, we need to know/learn what happen to management /
+	community / users, etc.
+	After that, gradually increase the development weight of R4 base
+	drivers over time. BSP or user will switches to R4 style
+	step-by-step.
+
+	In worst case, just removing R4 related code is easy and has no
+	effect to each OS. see also [README.idea]
+
+* How to manage R4 on each OS
+
+	In development phase, each OS device operator can update
+	R4 driver to create/fix the code.
+
+	When release phase, each OS device operator need to
+	post or publish the R4 patch first.
+	And need to confirm use it on each OS second.
+	Because of license issue.
+
+* How to know R4 unauthorized customization
+
+	Each R4 code will have hash to manage the version.
+	see ${R4}/device/xxx/sha256sum.
+
+	You can easily check the R4 version which is used on your OS.
+	"custom driver" means "unauthorized customized driver" if
+	your OS was released from Renesas BSP, or "not yet officially
+	released driver" if you are coping R4 from official page.
+
+		> script/version-check.sh ${your_os}/r4_i2c_v1*
+	=>	r4_i2c_v1.h                   : custom driver
+		r4_i2c_v1_rcar_gen3.c         : v1.0.0-rc1

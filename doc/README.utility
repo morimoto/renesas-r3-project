@@ -1,0 +1,88 @@
+============== -*- outline -*- ==============
+
+		R4 utility
+
+2022/05/24	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+=============================================
+
+* How to use R4 in my OS
+
+	You need to check each R4 device support (r4_i2c, r4_sound, r4_dma, etc),
+	and supported versions (v1.x.x, v2.y.y, etc).
+	see also [README.api].
+
+	You need to copy R4 code from offical page to your OS.
+	Because it is copied, for example "compile had been broken unknowingly"
+	never happen. Each OS operator need to care about it.
+
+	Next, you need to create "OS wrapper driver" to use R4 on each
+	OS each devices. R4 shares "register settings" only. "OS wrapper driver"
+	need to care about non register settings by itself, for example,
+	OS specific parameters, Power, Clock, Lock, Pin, DMA, IRQ, etc.
+	see also [README.idea].
+
+	For example, if you want use R4 for I2C, Sound, DMA,
+	the files will be ...
+
+	You need to create
+		- os_wrapper_i2c_v1.c
+		- os_wrapper_sound_v1.c
+		- os_wrapper_dma_v1.c
+
+	You need to copy
+		- r4_i2c_v1.h	/ r4_i2c_v1.c
+		- r4_sound_v1.h	/ r4_sound_v1.c
+		- r4_dma_v1.h	/ r4_dma_v1.c
+
+	How to use R4 is indicacted on each .h files.
+	Basically, each os_wrapper_xxx.c driver needs to include R4 files (*)
+	At that point, it need to have specified functions/definitions.
+
+	os_wrapper_i2c_v1.c
+		#define rU32 xxx
+		#define rU8  xxx
+		#define CONFIG_R4_I2C_xxx	1
+		...
+	(*)	#include "r4/r4_i2c_v1.h"
+		static u32 r4_i2c_read(...)
+		static u32 r4_i2c_write(...)
+		...
+	(*)	#include "r4/r4_i2c_v1_rcar_gen3.c"
+
+* How to contribute to R4
+
+	R4 is using MIT license. Therefore, you need to update R4 first,
+	and copy it to OS or contribute it Community.
+	Otherwise, other R4 user OS can't share R4 code, because of
+	license issue.
+
+	Please create R4 patch, and post it to Renesas inside ML
+	which is for R4 discusion.
+
+* How can I know the new release
+
+	If R4 project accepted your patch, and if it was the time to
+	release, it will be announced via Renesas inside ML.
+	You can know new version, and decide whether to copy to your OS.
+	see also [README.api]
+
+* How to enable/disable feature
+
+	Each R4 have Atomic/PIO/DMA and/or other feature selector.
+	You can enable/disable necessary feature from that.
+	What kind of selector R4 has is depends on each device. In other
+	words, for example r4-i2c and r4-sound has each own selectors.
+	see also [README.api].
+
+	os_wrapper_i2c_v1.c
+		#define CONFIG_R4_I2C_ATOMIC	1
+		#define CONFIG_R4_I2C_PIO	1
+		#define CONFIG_R4_I2C_DMA	0
+
+	os_wrapper_sound_v1.c
+		#define CONFIG_R4_SND_ATOMIC	0
+		#define CONFIG_R4_SND_PIO	1
+		#define CONFIG_R4_SND_DMA	1
+		#define CONFIG_R4_SND_VOLUME	1
+		#define CONFIG_R4_SND_CONV_RATE	0
+		#define CONFIG_R4_SND_CONV_CHAN	1

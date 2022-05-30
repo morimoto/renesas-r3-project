@@ -1,0 +1,113 @@
+============== -*- outline -*- ==============
+
+		R4 idea
+
+2022/05/16	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+=============================================
+
+* What is the basic idea of R4
+
+	If you try to separate current existing device driver into
+	"HW register setting part" and other parts, and continue to
+	summarizing it, you will notice that separately implemented
+	related HW register settings can be merged into some functions.
+
+	Regardless of which OS, when you use the HW, all necessary
+	settings/information had already been arrived to driver.
+	And from HW point of view, regardless of which OS,
+	necessary interface should be almost fixed,
+	for example, <start>, <stop>, <setup A>, etc...
+
+	Therefore, you will notice that the merged functions for
+	HW register settings are very similar on each OS.
+	It is no surprise, because it is for the same device.
+
+	If it was stable or simple device, the interface function
+	for different SoC will be also similar.
+
+	It is the R4. see also [doc/README.api].
+
+	One note here is that R4 is needed for each device.
+	For example, r4_i2c, r4_sound, r4_sdhi, r4_usb, etc, ...
+
+	How to get the related information on each OS is not a big
+	deal then. OS wrapper driver will handle it.
+
+	ex) if "all info" caming in one function
+
+		static int os_dev_send(address, speed, *data)
+		{
+=>			r4_dev_send(address, speed, data);
+		}
+
+	ex) if "all info" caming one-by-one
+
+		static int os_dev_speed(speed)
+		{
+			priv->speed = speed;
+		}
+
+		static int os_dev_address(address)
+		{
+			priv->address = address;
+		}
+
+		static int os_dev_send(data)
+		{
+=>			r4_dev_send(priv->address, priv->speed, data);
+		}
+
+
+* How to handle non register settings
+
+	Each driver needs to care not only register settings, but need to care
+	about OS specific parameters, and/or Power, Clock, Lock, Pin, DMA, IRQ, etc.
+	R4 doesn't care about non register settings.
+	Each OS wrapper driver need to care about these with each OS style.
+
+	ex)
+
+	irq_handler()
+	{
+=>		ret = r4_xxx_irq();
+		if (ret == done)
+			wake_up();
+	}
+
+	os_driver_start()
+	{
+		enable_power()
+		enable_clock()
+		lock()
+=>		r4_xxx_setup()
+=>		r4_xxx_start()
+		unlock()
+		start_dma();	(*)
+		wait()
+		disable_clock()
+		disable_power()
+	}
+
+	os_driver_prove()
+	{
+		init_irq_handler(irq_handler);
+		init_lock();
+		init_clock();
+		init_power();
+		init_gpio();
+		init_dma();	(*)
+=>		r4_xxx_init();
+	}
+
+	Here, for example init_dma() / start_dma() are "OS specific" API (*),
+	and it will finally goes to each own driver, like xxx_dma.c
+	But it might also be goes to other R4 by same logic, like below
+
+		[OS specific API]		[OS dirver]		[R4]
+
+		init_dma()/start_dma() -->	os_wrapper_dma_v1.c ->	r4_dma.c
+
+* What is the R4 effect to each OS
+
+	What is needed to use R4 is adding wrapper driver,
+	no big change is needed to each OS and its framework.

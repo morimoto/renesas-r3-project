@@ -1,0 +1,280 @@
+============== -*- outline -*- ==============
+
+		R4 API
+
+2022/02/14	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+=============================================
+
+* How to define R4 API
+
+	Let's think about R4 API on simple I2C as sample case.
+	As first step, list up parameter and/use case.
+	We need to consider is...
+
+		(A) Address
+		(B) Write or Read
+		(C) Data buffer
+		(D) Transfer speed
+		(E) DMA/PIO/Atomic transfer
+
+	Here, (E) "Atomic" is "PIO without interrupt" in other words
+	"busy loop PIO", which is needed to test/confirmation,
+	and is possible to use on some OS which can't use interrupt.
+
+	Above are basically not specific for R-Car Gen3. Gen5
+	will be same, because I2C itself is simple and stable device.
+	Let's postpone about complex device for now.
+
+	Next, list up when we need to access to HW register on I2C case.
+
+		- When user request start/stop
+		- On interrupt handler
+		- Before/After DMA start.
+
+	When we create R4 API, we need to think about some use case,
+	but it can be aggregated into a limited forms.
+
+	In Atomic
+
+		- r4_i2c_probe() / r4_i2c_remove()
+		- r4_i2c_setup_speed()			... (D)
+		- r4_i2c_xfer_atomic()			... (A, B, C)
+
+	In PIO
+
+		- r4_i2c_probe() / r4_i2c_remove()
+		- r4_i2c_setup_speed()			... (D)
+		- r4_i2c_xfer_pio()			... (A, B, C)
+		- r4_i2c_xfer_pio_irq()			... (E)
+
+	In DMA
+
+		- r4_i2c_probe() / r4_i2c_remove()
+		- r4_i2c_setup_speed()			... (D)
+		- r4_i2c_xfer_dma_setup()		... (A, B, C)
+		- r4_i2c_xfer_dma_info()		... (E)
+		- r4_i2c_xfer_dma_start/stop()		... (E)
+		- r4_i2c_xfer_dma_irq()			... (E)
+
+-	You can see that these API is very common style, so we can reuse it
+	not only for Gen3, but Gen5 or later also.
+
+	You might wonder why we can't merge r4_i2c_setup_speed() and r4_i2c_xfer_xxx()
+	into one function.
+	This is because, we need to judge selected speed, and need to return error
+	ondemand if the requested speed was not supported, etc.
+	Some OS requests speed at initial time, some OS requests it at run time.
+
+**  R4 need to have selector
+
+	Some OS might not need some of them. For example, some OS needs Atomic only,
+	some OS doesn't need DMA, etc. Therefor, R4 needs to have selector for it.
+	This is not only for Atomic/PIO/DMA, but also other features on each device too.
+	For exmaple above case, it will be like below.
+	see also [README.utility].
+
+		r4_i2c_probe()
+		r4_i2c_remove()
+		r4_i2c_setup_speed()
+	#ifdef CONFIG_R4_I2C_ATOMIC
+		r4_i2c_xfer_atomic()
+	#endif
+	#ifdef CONFIG_R4_I2C_PIO
+		r4_i2c_xfer_pio()
+		r4_i2c_xfer_pio_irq()
+	#endif
+	#ifdef CONFIG_R4_I2C_DMA
+		r4_i2c_xfer_dma_setup()
+		r4_i2c_xfer_dma_info()
+		r4_i2c_xfer_dma_start/stop()
+		r4_i2c_xfer_dma_irq()
+	#endif
+
+* How to maintenance R4 API
+
+	I'm thinking that Renesas inside ML can help to define new API,
+	and/or new version release announcement.
+	Each OS device driver operator will join into this ML,
+	and discuss how to add/handle API, and/or knows what was
+	added on new version.
+	see also [README.utility].
+
+* How to keep R4 API compatibility
+
+	For example, if we already have I2C v1.0.0 which supports Gen3.
+	On Linux case, the files are...
+
+		(A) i2c_r4_v1.c		// Linux wrapper v1.0.0
+		(B) r4_i2c_v1_gen3.c	// R4 Gen3       v1.0.0
+
+	Linux I2C framework will call (A), and it will call (B).
+	Linux driver operator need to create (A) by himself.
+	(B) is *copied* from R4 offical page to Linux.
+	see also [doc/README.utility].
+
+	If Gen4 coming, and it has compatible with Gen3, we have nothing
+	to do. It will simply like this
+
+		i2c_r4_v1.c		// Linux wrapper v1.0.0
+		r4_i2c_v1_gen3.c	// R4 Gen3/Gen4  v1.0.0
+
+	The point is when Gen5 coming which doesn't have compatibility
+	with Gen3/Gen4. It will be 3 patterns.
+
+		(1) Gen3 vs Gen5 are almost same,
+		    but some register settings are different.
+		(2) Gen3 vs Gen5 are completely different.
+		    But, existing R4 API is enough for it.
+		(3) Gen3 vs Gen5 are completely different.
+		    Existing R4 API doesn't work.
+
+**	[ASSUMPTION]
+
+	"R4 update" never happen by automatically on eash OS,
+	because it need to be *copied* from R4 official page.
+	This means each OS operator copy it by himself,
+	and he need to compile/test, etc.
+
+	This indicates below case can be happen.
+	For example, if latest R4 I2C version was v5.1.2.
+
+		- Linux    is using latest version (v5.1.2).
+		- FreeRTOS is using old    version (v3.8.2).
+		...
+
+	It is each OS operator's decision. FreeRTOS operator decided
+	to keep old version for some reasons, in this case.
+	Maybe main reason is he don't need to support new SoC, etc.
+	Please see below for more detail.
+
+
+**	[case (1)]
+
+		Gen3 vs Gen5 are almost same,
+		but some register settings are different.
+
+	In this case, R4 need to have extra API for Gen5.
+	For example, Gen5 need to use new interface, let's say "mode" here.
+	(Please don't ask "what is the mode" :)
+	This "mode" was not needed on Gen3, but need on Gen5.
+
+	In this case, R4 will have example API for it, and related settings.
+
+	+	int r4_i2c_set_mode(r4, mode)
+	+	{
+	+		if (r4->set_mode)
+	+			return r4->set_mode(r4, mode);
+	+
+	+		// don't have .set_mode is not error
+	+		return 0;
+	+	}
+
+		/* Gen3/Gen4 */
+		struct r4_i2c_priv r4_i2c_rcar_gen3 = {
+			...
+		};
+
+	+	/* Gen5 */
+	+	struct r4_i2c_priv r4_i2c_rcar_gen5 = {
+	+		...
+	+		.set_mode = r4_gen5_set_mode,
+	+	};
+
+	New API was added, but almost all are same.
+	In this case, we can keep "major" version, but increase "minor" version
+	on R4 official page (v1.0.0 -> v1.1.0).
+
+		r4_i2c_v1_gen3.c	// R4 Gen3/4/5   v1.1.0 (Gen5 support was added)
+
+
+	If Linux want to support Gen5, Linux operator need to copy v1.1.0 R4 I2C files,
+	and update Linux wrapper driver by himself, and compile/test, etc.
+
+		int i2c_xxx(...)
+		{
+			...
+	+		r4_i2c_set_mode(xxx);
+			...
+		}
+
+	In final, Linux need to have...
+
+		i2c_r4_v1.c		// Linux wrapper v1.1.0 (call r4_i2c_set_mode())
+		r4_i2c_v1_gen3.c	// R4 Gen3/4/5   v1.1.0 (copied from R4 official page)
+
+
+	For example, if FreeRTOS don't need to support Gen5, they can keep v1.0.0.
+	Nothing happen on FreeRTOS even if R4 was updated, because they don't copy
+	R4 files to it.
+
+	So what happen if we noticed some Gen3 bug after v1.1.0 was released ?
+	Then, bug fix version was increased on R4 official page. (v1.1.0 -> v1.1.1)
+	Each OS need to copy it by themself.
+
+		i2c_r4_v1.c		// Linux wrapper v1.1.1 (same as v1.1.0)
+		r4_i2c_v1_gen3.c	// R4 Gen3/4/5   v1.1.1 (bug fixed)
+
+	What FreeRTOS can do if he is using v1.0.0, and if he want to have Gen3 bug fix,
+	but don't need Gen5 support.
+	In this case, to reduce R4 maintenance cost, FreeRTOS need to update to v1.1.1.
+	This means, v1.0.1 will never released after v1.1.0 was released.
+	Or they can manage v1.0.1 on own branch.
+
+
+**	[case (2)]
+
+		Gen3 vs Gen5 are completely different.
+		But, existing R4 API is enough for it.
+
+	In this case, we can simply add new files for Gen5 on R4 official page.
+	(Let's back to v1.0.0 brain :). No version up is needed.
+
+		r4_i2c_v1_gen3.c	// R4 Gen3/4	v1.0.0
+		r4_i2c_v1_gen5.c	// R4 Gen5	v1.0.0
+
+	If we noticed Gen3 bug after Gen5 support, the version will be
+
+		r4_i2c_v1_gen3.c	// R4 Gen3/4	v1.0.1 (bug fixed)
+		r4_i2c_v1_gen5.c	// R4 Gen5	v1.0.1 (same as v1.0.0)
+
+	Each OS need to copy these from R4 official page.
+
+
+**	[case (3)]
+
+		Gen3 vs Gen5 are completely different.
+		Existing R4 API doesn't work.
+
+	In this case, we need to add v2.0.0 which has no compatibility with v1.0.0
+
+		i2c_r4_v1.c		// Linux wrapper v1.0.0
+		r4_i2c_v1_gen3.c	// R4 Gen3/4	 v1.0.0
+
+		i2c_r4_v2.c		// Linux wrapper v2.0.0
+		r4_i2c_v2_gen5.c	// R4 Gen5	 v2.0.0
+
+	v1.x and v2.x are maintained separately.
+	For example, it will be like this in the future.
+
+		i2c_r4_v1.c		// Linux wrapper v1.3.8
+		r4_i2c_v1_gen3.c	// R4 Gen3/4	 v1.3.8
+		r4_i2c_v1_rz.c		// R4 Rz/x	 v1.3.8
+
+		i2c_r4_v2.c		// Linux wrapper v2.5.2
+		r4_i2c_v2_gen5.c	// R4 Gen5	 v2.5.2
+		r4_i2c_v2_gen6.c	// R4 Gen6	 v2.5.2
+
+* How to judge R4 major/minor version update
+
+	We need to think about simple deivce case,
+	and complex device case.
+
+	If it was simple device case, like I2C, DMA, etc,
+	we need is only minor version up.
+	We can keep API major version in this case.
+	We can reuse almost same R4 API for each SoC/OS.
+
+	If it was complex device case, like Sound, Video, etc,
+	maybe keeping compatibility is very difficult.
+	In such case, we don't need to hesitate update major version.
+	Tring to forcibly keeping compatibility only increases maintenance costs.

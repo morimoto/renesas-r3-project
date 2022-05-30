@@ -1,0 +1,104 @@
+============== -*- outline -*- ==============
+
+		What is R4 ?
+
+2022/02/14	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+=============================================
+
+* What is R4
+
+	It is "Renesas Reckless Register setting Reform Project",
+	commonly known as "Renesas R3 Project" or more simply "R4 Project" !!
+
+	R4 tries to separate "OS driver" into "wrapper driver part"
+	(for OS operation) and "HW register setting part".
+	And share "HW register setting part" between many OSs.
+
+	old:
+		OS-A <-> driver <-> HW
+	new:
+		OS-A <-> wrapper driver <->
+		OS-B <-> wrapper driver <-> register setting (R4) <-> HW
+		OS-C <-> wrapper driver <->
+
+	One note here that each OS need to create "wrapper driver" to use R4.
+	R4 is "sharing register settings", *not* "sharing driver".
+	                                   ^^^^^^^^^^^^^^^^^^^^^^
+
+* What is the back ground ?
+
+	Renesas will provide "Linux BSP" to customer, and they can
+	use/test/confirm SoC and/or Platforms by using it.
+	But customer might not use "Linux" on their product.
+	In such case, they will switch to there own OS after confirming
+	HW via Linux.
+
+	Therefore, Renesas need to provide many kind of OS for customer.
+	Because each OS needs each device drivers, we need to create many
+	drivers in total (OS x SoC x device).
+
+	In such case, we want to re-use Linux driver to other OSs, but it is
+	difficult, because it has license issue, different driver styles, etc.
+
+	And from customer point of view, each driver on each OS from Renesas
+	should have same quality, but it never happened before. Because driver
+	developer have never synchronized each other.
+
+	In reality, "Sharing driver" on each OSs are completely impossible,
+	but R4 is thinking that we can share "register settings" on each OSs.
+	The idea is quite simple enough. see also [doc/README.idea] for detail.
+
+* What is the current real
+
+	Renesas BSP team is creating many BSP for each OS,
+	but because of above reasons, we need to create many drivers for each
+	OS for each devices.
+
+	In "perfect world", BSP team want to use sharing method for each OS/BSP,
+	but there is no such precedent for now. Thus, someone will say
+	"It is impossible because there is no precedent".
+
+	One of the reason is because there is a lot of work to release BSP to
+	customer. BSP team needs to focus "real world" first.
+	Creating no precedent "perfect world" method will happen later,
+	and this "later" never happen.
+
+* Why Renesas can work for R4
+
+	Renesas has both "BSP team" and "upstream team".
+	"BSP team" needs to focus "real world", but "upstream team" can focus to
+	"perfect world". "How to share with many OS" is "perfect world" topic.
+	I guess other vendor has "BSP team" only (?).
+	see also [README.management]
+
+* Why R4 is needed
+
+	We can reduce cost/time and improve drivers quality
+	by sharing register settings between many OS.
+	BSP team and customer will be happy.
+
+* How R4 helps me
+
+	You need to create "OS wrapper driver" to use R4, because R4 is not
+	"sharing driver" but "sharing register settings". But if you once create
+	it on your OS, you don't need to think about register settings anymore.
+	You can use other OS proven HW register settings, and you can share the
+	bug fix which was discovered on other OS, etc.
+
+* What is the Merit/Demerit of R4
+
+	BSP team and customer can easy get many merits from R4.
+
+		- Easy to reuse the "register settings" on each OS
+		- Easy to reuse it on some script/debugger, etc
+		- Easy to share bug fix
+		- Easy to comparison the issue/behavior on different OS
+		- Increase Renesas BSP quality
+		- Reduce development cost
+
+	On the other hands, R4 has demerits.
+
+		- Implementation and maintenance might be complex
+		- Not all OS/devices can use R4
+		- It is very difficult to convince someone who is afraiding
+		  to do new things of "no precedent"

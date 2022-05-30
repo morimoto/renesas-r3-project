@@ -5,57 +5,44 @@
 2022/02/14	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 =============================================
 
-* What is this ? / Why needed ?
+Please see doc/README.x to understand about R4.
 
-	[BACK GROUND]
+* What is R4 (doc/README.R4)
 
-	Renesas need to provide many kind of OS for customer for many reasons,
-	and each OS needs device drivers for each devices, thus we need to create
-	many drivers in total.
+	- What is R4
+	- What is the back ground
+	- What is the current real
+	- Why Renesas can work for R4
+	- Why R4 is needed
+	- How R4 helps me
+	- What is the Merit/Demerit of R4
 
-	And from customer point of view, each device driver for same device on each
-	OS from Renesas should have same quality, but it never happened before.
-	Because device driver developer have never synchronized each other.
+* R4 idea (doc/README.idea)
 
-	On the other hand, in some cases, customer received Linux BSP from Renesas,
-	and try to use it as test purpose, but they will switch to there own OS after
-	that for some reasons.
-	In such case, customer want to re-use Linux driver to there own OS, but
-	they can't, because of GPL license.
+	- What is the basic idea of R4
+	- How to handle non register settings
+	- What is the R4 effect to each OS
 
-	[DEVICE DRIVER]
+* R4 API (doc/README.api)
 
-	Let's think about "device driver" here.
-	"device driver" talks to both "OS" and "HW".
+	- How to define R4 API
+	  - R4 need to have selector
+	- How to maintenance R4 API
+	- How to keep R4 API compatibility
+	- How to judge R4 major/minor version update
 
-		<--- OS ---> <------------- device driver --------------> <--- HW --->
+* R4 utility (doc/README.utility)
 
-		Linux     <-> (talk to OS) device driver (talk to HW) <--|
-		QNX       <-> (talk to OS) device driver (talk to HW) <--|
-		FreeRTOS  <-> (talk to OS) device driver (talk to HW) <--|
-		U-Boot    <-> (talk to OS) device driver (talk to HW) <--+-> SoC
-		Xen       <-> (talk to OS) device driver (talk to HW) <--|
-		Zephyr    <-> (talk to OS) device driver (talk to HW) <--|
-		Integrity <-> (talk to OS) device driver (talk to HW) <--|
+	- How to use R4 in my OS
+	- How to contribute to R4
+	- How can I know the new release
+	- How to enable/disable feature
 
-	If we can separate "talk to OS" and "talk to HW",
-	it will be...
+* R4 management (doc/README.management)
 
-		<--- OS ---> <---------------- device driver -----------------><--- HW --->
-		             <----- OS wrapper driver ------><-- raw driver -->
-
-		Linux     <-> (talk to OS) device driver <--|
-		QNX       <-> (talk to OS) device driver <--|
-		FreeRTOS  <-> (talk to OS) device driver <--|
-		U-Boot    <-> (talk to OS) device driver <--+--> common driver  <->  SoC
-		Xen       <-> (talk to OS) device driver <--|    (talk to HW)
-		Zephyr    <-> (talk to OS) device driver <--|
-		Integrity <-> (talk to OS) device driver <--|
-
-	[THIS IS R4]
-
-	This is Renesas's recklessly project to separate "device driver" into
-	"OS wrapper driver" and "raw driver" ;P
-
-	"Renesas Reckless Register setting Reform Project", commonly known as
-	"Renesas R3 Project" or more simply "R4 Project" !!
+	- Who makes R4
+	- Which device will be covered by R4
+	- When R4 driver is coming
+	- How to handle R4 driver and existing driver
+	- How to manage R4 on each OS
+	- How to know R4 unauthorized customization
