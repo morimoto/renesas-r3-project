@@ -29,6 +29,15 @@
 	void  r4_i2c_write(struct r4_i2c_priv *r4, int reg, rU32 val);
 	void  r4_i2c_udelay(struct r4_i2c_priv *r4, unsigned int time);
 
+[CONFIGs]
+
+	You need to select necessary features.
+
+	CONFIG_R4_I2C_RECOVERY
+	CONFIG_R4_I2C_ATOMIC
+	CONFIG_R4_I2C_PIO
+	CONFIG_R4_I2C_DMA
+
 [Version check]
 
 	You can confirm R4 driver version by using R4_I2C_VERSION_MATCH().
