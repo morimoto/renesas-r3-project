@@ -69,3 +69,31 @@
 		> script/version-check.sh ${your_os}/r4_i2c_v1*
 	=>	r4_i2c_v1.h                   : custom driver
 		r4_i2c_v1_rcar_gen3.c         : v1.0.0-rc1
+
+* How to manage if R4 was changed on OS side first
+
+	We need to protect unnecessary change from community as
+	first step if possible. But if the change was necessary,
+	we can accept it and adjust R4 to it anyway.
+
+	Let's say 2 patterns exist.
+	"big R4 API change" and "small R4 API change".
+
+	And let's name 2 R4, "R4 of official page" as "official R4",
+	"R4 which was copied to OS" as "copied R4".
+
+	If "big R4 API change" was needed, then, R4 API design itself was wrong.
+	This can be happen at -rc timing.
+
+	"small R4 API change" might be happen.
+	In such case, "copied R4" will be indicated as "custom driver",
+	because there is difference from "official R4".
+	But it has no effect to other OS, because it is "copied R4".
+	In other words, nothing happen if you don't copy.
+
+	If we ignore license issue here, we can update "official R4"
+	as "small R4 API change".
+	Then, R4 *minor* version number will be increased.
+
+	Each OS will copy new "official R4", and adjust its wrapper driver.
+	Then, it will be no longer "custom driver", but "official driver".
