@@ -5,16 +5,6 @@
 2022/05/25	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 =============================================
 
-* Who makes R4
-
-	"Sharing register settings" is "perfect world" topics,
-	and Renesas upstream team can focus to it.
-	see also [README.R4]
-
-	*NOTE*
-	R4 may become Morimoto's hobby project.
-	There is no guarantee to be handled by upstream team for now.
-
 * Which device will be covered by R4
 
 	see also [README.api]

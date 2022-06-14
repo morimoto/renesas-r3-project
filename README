@@ -12,7 +12,6 @@ Please see doc/README.x to understand about R4.
 	- What is R4
 	- What is the back ground
 	- What is the current real
-	- Why Renesas can work for R4
 	- Why R4 is needed
 	- How R4 helps me
 	- What is the Merit/Demerit of R4
@@ -40,7 +39,6 @@ Please see doc/README.x to understand about R4.
 
 * R4 management (doc/README.management)
 
-	- Who makes R4
 	- Which device will be covered by R4
 	- When R4 driver is coming
 	- How to handle R4 driver and existing driver

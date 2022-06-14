@@ -63,14 +63,6 @@
 	Creating no precedent "perfect world" method will happen later,
 	and this "later" never happen.
 
-* Why Renesas can work for R4
-
-	Renesas has both "BSP team" and "upstream team".
-	"BSP team" needs to focus "real world", but "upstream team" can focus to
-	"perfect world". "How to share with many OS" is "perfect world" topic.
-	I guess other vendor has "BSP team" only (?).
-	see also [README.management]
-
 * Why R4 is needed
 
 	We can reduce cost/time and improve drivers quality
