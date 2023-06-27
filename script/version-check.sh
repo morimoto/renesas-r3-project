@@ -23,7 +23,7 @@ do
 			ver=
 			for sha256sum in ${SHA256SUMs}
 			do
-				grep ${t_dev} ${sha256sum} | sha256sum -c --status -
+				grep ${t_dev} ${sha256sum} | sha256sum -c --status - 2>/dev/null
 				if [ $? = 0 ]; then
 					ver=`echo ${sha256sum} | xargs basename`
 					break
