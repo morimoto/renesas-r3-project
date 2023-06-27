@@ -18,9 +18,10 @@
 //	r4_i2c_v1_rcar_gen3.c         : v1.0.0-rc1
 //
 
+#define VER_MAJOR	1
 #define VER_MINOR	0
 #define VER_BUGFIX	0
-#define VER_RC		1
+#define VER_RC		2
 
 #define ICSCR		0x00
 #define ICMCR		0x04
@@ -612,7 +613,7 @@ static int r4_gen3_xfer_dma_enable(struct r4_i2c_priv *r4, int enable)
  *	[PRIV RELATIONSHIP]
  */
 struct r4_i2c_priv r4_i2c_rcar_gen3 = {
-	.version		= R4_I2C_VERSION(1, VER_MINOR, VER_BUGFIX, VER_RC),
+	.version		= R4_I2C_VERSION(VER_MAJOR, VER_MINOR, VER_BUGFIX, VER_RC),
 	.alloc_size		= sizeof(struct r4_i2c_priv) + sizeof(struct r4_i2c_gen3_priv),
 	.setup_speed		= r4_gen3_setup_speed,
 	R4_I2C_RECOVERY
