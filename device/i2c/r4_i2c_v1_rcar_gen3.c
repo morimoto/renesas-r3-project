@@ -17,11 +17,6 @@
 //	r4_i2c_v1.h                   : custom driver
 //	r4_i2c_v1_rcar_gen3.c         : v1.0.0-rc1
 //
-
-#define VER_MINOR	0
-#define VER_BUGFIX	0
-#define VER_RC		1
-
 #define ICSCR		0x00
 #define ICMCR		0x04
 #define ICSSR		0x08
