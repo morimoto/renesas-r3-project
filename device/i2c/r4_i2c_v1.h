@@ -9,7 +9,7 @@
 
 #define VER_MINOR	0
 #define VER_BUGFIX	0
-#define VER_RC		1
+#define VER_RC		2
 /***********************************************************************
 [Original Code]
 
