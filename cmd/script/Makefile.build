@@ -1,0 +1,6 @@
+-include ${CMD}/script/Makefile.common
+
+loop:
+	${Q}for SRC in ${DEV_FILEs}; do\
+		make ${S} SRC=$${SRC} -f ${CMD}/script/Makefile.cc;\
+	done;

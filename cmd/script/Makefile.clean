@@ -1,0 +1,4 @@
+-include ${CMD}/script/Makefile.common
+
+all:
+	${Q}rm -fr r4_*

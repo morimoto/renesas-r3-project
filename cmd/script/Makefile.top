@@ -1,0 +1,15 @@
+-include ${CMD}/script/Makefile.common
+
+all: build
+
+loop:
+	${Q}for DEV_VER in ${DEV_VERs}; do\
+		cd $${CMD}/$${DEV_VER};\
+		make ${S} -f ${CMD}/script/${MAKE_TARGET};\
+	done;
+
+build:
+	${Q}make ${S} MAKE_TARGET=Makefile.build  loop
+
+clean:
+	${Q}make ${S} MAKE_TARGET=Makefile.clean  loop

@@ -1,0 +1,22 @@
+export CMD
+export TOP	= ${CMD}/..
+
+# DEV_VER	i2c/v1
+# DEVICE	i2c
+export DEV_VER
+export DEVICE	= $(subst /,,$(dir ${DEV_VER}))
+
+WARN		= -Wall -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Werror=declaration-after-statement
+INCLUDE		= -I${TOP}/device/${DEVICE} -I${CMD}/script/
+CFLAGS		= ${WARN} ${EXFLAGS}
+TGT		= $(SRC:%.c=%)
+DEV_FILEs	= $(shell cd ${TOP}/device/${DEVICE}/; ls *.c)
+
+# verbose make
+ifeq (${VERBOSE}, 1)
+ export Q =
+ export S =
+else
+ export Q = @
+ export S = -s
+endif

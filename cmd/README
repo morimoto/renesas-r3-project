@@ -1,0 +1,18 @@
+i============== -*- outline -*- ==============
+
+                    README
+
+2023/06/28	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+=============================================
+
+We can use ${R4}/device/xxx code as part of normal command,
+and not only for command, but for other script, etc.
+This command is good sample for it.
+
+* How to use it ?
+
+	You can run make, and check each dirs
+
+		> cd ${R4}/cmd
+		> make
+		> ls i2c/v1
