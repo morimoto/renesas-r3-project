@@ -7,6 +7,9 @@
 #ifndef __I2C_V1_H
 #define __I2C_V1_H
 
+#define VER_MINOR	0
+#define VER_BUGFIX	0
+#define VER_RC		1
 /***********************************************************************
 [Original Code]
 
