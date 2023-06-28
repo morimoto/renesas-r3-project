@@ -86,8 +86,8 @@ struct r4_i2c_gen3_priv {
 };
 
 /* flags */
-#define FLAG_READ	(1 << 0)
-#define FLAG_READ0	(1 << 1)
+#define FLAG_READ	(1U << 0)
+#define FLAG_READ0	(1U << 1)
 
 #define R4_TO_RPIV(r4) (struct r4_i2c_gen3_priv *)(r4 + 1)
 
