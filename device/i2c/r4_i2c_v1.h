@@ -11,10 +11,6 @@
 #define VER_BUGFIX	0
 #define VER_RC		1
 /***********************************************************************
-[Original Code]
-
-	https://github.com/morimoto/renesas-r3-project.git
-
 [Confirm the R4 version you are using]
 
 	It will indicate controlled driver, or it was custom.

@@ -4,10 +4,6 @@
 //
 // Copyright (c) 2022 Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 //
-// [Original Code]
-//
-//	https://github.com/morimoto/renesas-r3-project.git
-//
 // [Confirm the R4 version you are using]
 //
 // It will indicate controlled driver, or it was custom.
